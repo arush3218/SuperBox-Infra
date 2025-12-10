@@ -5,7 +5,7 @@ Write-Host "Packaging Lambda function..." -ForegroundColor Cyan
 
 # Navigate to project root
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $ScriptDir)
+$ProjectRoot = Split-Path -Parent $ScriptDir
 $LambdaModule = Join-Path $ScriptDir "..\modules\lambda"
 
 Write-Host "Project root: $ProjectRoot" -ForegroundColor Gray
