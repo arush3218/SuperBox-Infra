@@ -10,8 +10,9 @@ module "s3" {
 module "iam" {
   source = "./modules/iam"
 
-  project_name  = var.project_name
-  s3_bucket_arn = module.s3.bucket_arn
+  project_name      = var.project_name
+  s3_bucket_arn     = module.s3.bucket_arn
+  websocket_api_arn = module.websocket.execution_arn
 }
 
 # Lambda function for MCP execution
@@ -26,4 +27,13 @@ module "lambda" {
   lambda_memory_size = var.lambda_memory_size
   lambda_timeout     = var.lambda_timeout
   log_retention_days = var.log_retention_days
+}
+
+# WebSocket API for persistent MCP connections
+module "websocket" {
+  source = "./modules/websocket"
+
+  project_name         = var.project_name
+  lambda_function_name = module.lambda.function_name
+  lambda_invoke_arn    = module.lambda.invoke_arn
 }

@@ -50,3 +50,22 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
     ]
   })
 }
+
+# Custom policy for WebSocket API Gateway connections
+resource "aws_iam_role_policy" "lambda_websocket_access" {
+  name = "${var.project_name}-lambda-websocket-policy"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "execute-api:ManageConnections"
+        ]
+        Resource = "${var.websocket_api_arn}/*"
+      }
+    ]
+  })
+}

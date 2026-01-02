@@ -1,5 +1,4 @@
 #!/bin/bash
-# Package Lambda function for deployment
 # Usage: bash package_lambda.sh
 
 set -e
@@ -8,8 +7,8 @@ echo "Packaging Lambda function..."
 
 # Navigate to project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-LAMBDA_MODULE="$SCRIPT_DIR/../modules/lambda"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+LAMBDA_MODULE="$PROJECT_ROOT/modules/lambda"
 
 echo "Project root: $PROJECT_ROOT"
 echo "Lambda module: $LAMBDA_MODULE"
@@ -19,12 +18,14 @@ TEMP_DIR=$(mktemp -d)
 echo "Temporary directory: $TEMP_DIR"
 
 # Copy lambda.py to temp directory
-if [ ! -f "$PROJECT_ROOT/lambda.py" ]; then
-    echo "Error: lambda.py not found in project root"
+LAMBDA_SOURCE="$PROJECT_ROOT/aws/lambda.py"
+if [ ! -f "$LAMBDA_SOURCE" ]; then
+    echo "Error: lambda.py not found in aws folder"
+    rm -rf "$TEMP_DIR"
     exit 1
 fi
 
-cp "$PROJECT_ROOT/lambda.py" "$TEMP_DIR/"
+cp "$LAMBDA_SOURCE" "$TEMP_DIR/"
 echo "[OK] Copied lambda.py"
 
 # Create zip file
@@ -46,7 +47,7 @@ echo "Lambda function packaged successfully!"
 echo "Location: $LAMBDA_MODULE/lambda_payload.zip"
 echo ""
 echo "Next steps:"
-echo "  cd $SCRIPT_DIR/.."
+echo "  cd $PROJECT_ROOT"
 echo "  tofu init"
 echo "  tofu plan"
 echo "  tofu apply"

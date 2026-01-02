@@ -7,8 +7,3 @@ output "bucket_arn" {
   description = "S3 bucket ARN"
   value       = aws_s3_bucket.registry.arn
 }
-
-output "bucket_domain_name" {
-  description = "S3 bucket domain name"
-  value       = aws_s3_bucket.registry.bucket_domain_name
-}

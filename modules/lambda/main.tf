@@ -28,27 +28,3 @@ resource "aws_lambda_function" "mcp_executor" {
     Name = "${var.project_name}-mcp-executor"
   }
 }
-
-# Lambda function URL (public HTTPS endpoint)
-resource "aws_lambda_function_url" "mcp_executor" {
-  function_name      = aws_lambda_function.mcp_executor.function_name
-  authorization_type = "NONE"
-
-  cors {
-    allow_credentials = false
-    allow_origins     = ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["*"]
-    expose_headers    = ["*"]
-    max_age           = 3600
-  }
-}
-
-# Lambda permission for function URL
-resource "aws_lambda_permission" "function_url" {
-  statement_id           = "AllowFunctionURLInvoke"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.mcp_executor.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
-}

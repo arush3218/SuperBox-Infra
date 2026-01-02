@@ -1,4 +1,3 @@
-# Package Lambda function for deployment
 # Usage: .\package_lambda.ps1
 
 Write-Host "Packaging Lambda function..." -ForegroundColor Cyan
@@ -17,9 +16,9 @@ New-Item -ItemType Directory -Path $TempDir | Out-Null
 Write-Host "Temporary directory: $TempDir" -ForegroundColor Gray
 
 # Copy lambda.py to temp directory
-$LambdaSource = Join-Path $ProjectRoot "lambda.py"
+$LambdaSource = Join-Path $ProjectRoot "aws\lambda.py"
 if (-not (Test-Path $LambdaSource)) {
-    Write-Host "Error: lambda.py not found in project root" -ForegroundColor Red
+    Write-Host "Error: lambda.py not found in aws folder" -ForegroundColor Red
     Remove-Item -Recurse -Force $TempDir
     exit 1
 }

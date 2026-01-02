@@ -1,11 +1,16 @@
-output "lambda_function_url" {
-  description = "HTTPS endpoint for Lambda function (use this as LAMBDA_BASE_URL)"
-  value       = module.lambda.function_url
+output "aws_region" {
+  description = "AWS region"
+  value       = var.aws_region
 }
 
 output "s3_bucket_name" {
-  description = "S3 bucket name for MCP registry (use this as S3_BUCKET_NAME)"
+  description = "S3 bucket name for MCP registry"
   value       = module.s3.bucket_name
+}
+
+output "websocket_url" {
+  description = "WebSocket URL for MCP connections"
+  value       = module.websocket.websocket_url
 }
 
 output "lambda_function_name" {
@@ -23,27 +28,16 @@ output "cloudwatch_log_group" {
   value       = module.lambda.log_group_name
 }
 
-output "aws_region" {
-  description = "AWS region"
-  value       = var.aws_region
-}
-
 output "next_steps" {
   description = "Post-deployment instructions"
   value       = <<-EOT
 
     Infrastructure deployed successfully!
-
     Update your .env file with:
 
-    LAMBDA_BASE_URL=${module.lambda.function_url}
-    S3_BUCKET_NAME=${module.s3.bucket_name}
     AWS_REGION=${var.aws_region}
+    S3_BUCKET_NAME=${module.s3.bucket_name}
+    WEBSOCKET_URL=${module.websocket.websocket_url}
 
-    Test the Lambda function:
-    curl -X POST ${module.lambda.function_url}/test-server
-
-    View logs:
-    aws logs tail ${module.lambda.log_group_name} --follow
   EOT
 }
