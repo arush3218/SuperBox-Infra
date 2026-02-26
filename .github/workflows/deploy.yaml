@@ -1,0 +1,121 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      lambda_source_ref:
+        description: Branch/tag from superbox.ai to deploy
+        required: false
+        default: production
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan Infrastructure
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Checkout Application Code
+        uses: actions/checkout@v6
+        with:
+          repository: areebahmeddd/superbox.ai
+          ref: ${{ inputs.lambda_source_ref }}
+          path: app-code
+
+      - name: Copy Lambda Function Code
+        run: cp app-code/src/superbox/aws/lambda.py aws/lambda.py
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: v1.11.5
+
+      - name: Package Lambda Function
+        run: |
+          cd scripts
+          bash package_lambda.sh
+
+      - name: Upload Lambda Package Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: lambda-package
+          path: modules/lambda/lambda_payload.zip
+          retention-days: 1
+
+      - name: Initialize OpenTofu
+        run: tofu init
+
+      - name: Validate Terraform Configuration
+        run: tofu validate
+
+      - name: Generate Terraform Plan
+        run: tofu plan -out=tfplan
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: tfplan
+          path: tfplan
+          retention-days: 1
+
+  apply:
+    name: Apply Infrastructure Changes
+    runs-on: ubuntu-latest
+    needs: plan
+    env:
+      TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: v1.11.5
+
+      - name: Download Lambda Package Artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: lambda-package
+          path: modules/lambda
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: tfplan
+
+      - name: Initialize OpenTofu
+        run: tofu init
+
+      - name: Apply Terraform Plan
+        run: tofu apply -auto-approve tfplan
+
+      - name: Capture Terraform Outputs
+        run: tofu output -json > outputs.json
+
+      - name: Upload Terraform Outputs Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: terraform-outputs
+          path: outputs.json
+          retention-days: 30
+
+      - name: Display Deployment Summary
+        run: |
+          echo "Infrastructure deployed successfully!"
+          echo ""
+          echo "S3 Bucket Name  : $(jq -r '.s3_bucket_name.value' outputs.json)"
+          echo "WebSocket URL   : $(jq -r '.websocket_url.value' outputs.json)"
+          echo "Lambda Source   : ${{ inputs.lambda_source_ref }}"
+          echo "Triggered by    : ${{ github.actor }}"
